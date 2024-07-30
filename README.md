@@ -1,5 +1,5 @@
 # FLLMB
-For Large Language Model Beginners
+*F*or *L*arge *L*anguage *M*odel *B*eginners
 
 ## Discription
 This is the rep of several llm models notebook.
