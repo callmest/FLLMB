@@ -13,6 +13,6 @@ This is the repetory of several llm models reproduce notebook.
 - Feel free to give suggestions and feedbacks!
 
 ## Content
-- transformer
-- GPT-2
+- [x] transformer
+- [x] GPT-2
 - [ ] LLaMA
