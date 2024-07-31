@@ -15,4 +15,4 @@ This is the repetory of several llm models reproduce notebook.
 ## Content
 - transformer
 - GPT-2
-- incoming: [ ] LLaMA
+- [ ] LLaMA
