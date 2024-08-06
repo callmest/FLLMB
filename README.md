@@ -13,8 +13,11 @@ This is the repetory of reproducing several llm models notebook.
     - Training and inference: some models may not update inference process, but it would be completed very soon. 
 
 - Feel free to give suggestions and feedbacks!
-
+---
 ## Content
 - [x] transformer
 - [x] GPT-2
 - [ ] LLaMA
+---
+## Addition
+- [x] RoPE

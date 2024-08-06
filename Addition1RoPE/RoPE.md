@@ -18,7 +18,7 @@
 
 6. **有问题非常欢迎找我讨论（可以issue），相互交流学习**！
 
-7. 本文的Github地址：
+7. 本文的Github地址：https://github.com/callmest/FLLMB/blob/main/Addition1RoPE/RoPE.md
 
 ----
 
