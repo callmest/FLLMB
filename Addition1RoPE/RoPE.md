@@ -380,3 +380,74 @@ $$
 (2) [【手撕LLM-NTK RoPE】长文本“高频外推、低频内插“从衰减性视角理解 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/702964625)
 
 (3) [【手撕LLM】长文本的Position Encoding的衰减性证明 - 知乎 (zhihu.com)](https://zhuanlan.zhihu.com/p/709234529)
+
+### 4. pytorch代码实现
+
+```python
+# 1. Pre-compute rope -> to preduce the cos and sin matrix
+import torch
+batch_size = 32
+seq_len = 1024
+n_embed = 128
+n_head = 8
+
+# base is used to calculate \theta
+base = 10000
+# \theta is the rotary angle, see formula(14)
+theta = 1.0 / (base ** (torch.arange(0, n_embed, 2) / n_embed))
+print('theta shape: \n', theta.shape)
+print('theta: \n', theta[:5])
+seq_idx = torch.arange(seq_len)
+print('seq_idx shape: \n', seq_idx.shape)
+# outer is the dot computation, idx_theta is the m\theta in the math equation.
+idx_theta = torch.outer(seq_idx, theta).float()
+print('id_theta shape: \n', idx_theta.shape)
+print('id_theta: \n', idx_theta[:2, :5])
+
+cache = torch.stack([torch.cos(idx_theta), torch.sin(idx_theta)], dim= -1)
+print('cache shape: \n', cache.shape)
+# we need to explain this transformation
+cos = torch.cos(idx_theta)
+print('cos: \n', cos[:5, :5])
+sin = torch.sin(idx_theta)
+print('sin: \n', sin[:5, :5])
+print('cache: \n', cache[:5, :5, :])
+# In the cache last dimension, the first column is cos(m\theta), the second column is sin(m\theta). m is the position and theta is the angle with dimension.
+
+# 2. apply rope -> there if an input q, and we transit it to the right form and then multiply it with cache above.
+## we can construct an input when debug
+## an input may look like: ( batch_size, seq_len, num_head, dim)
+x = torch.randn((batch_size, seq_len, n_head, n_embed))
+print('x shape: \n', x.shape)
+## 1. trucate to avoid length out of range
+seq_len = x.size(1)
+cache = cache[:seq_len]
+## 2. reshape the x -> let the last two dim -> (-1, 2) -> (128) -> (64, 2)
+x_ = x.reshape(*x.shape[:-1], -1, 2)
+print('x_ shape: \n', x_.shape)
+rope_cache = cache.view(1, x_.size(1), 1, x_.size(3), 2)
+print('rope_cache shape: \n', rope_cache.shape)
+
+## then we compute the rope output according to the formula (15), '...' is the slice operation in torch.
+x_0 = x_[..., 0]
+x_1 = x_[..., 1]
+print('x_0 shape: \n', x_0.shape)
+rope_cache_0 = rope_cache[..., 0]
+rope_cache_1 = rope_cache[..., 1]
+print('rope_cache_0 shape: \n', rope_cache_0.shape)
+
+## * is element-wise multiplying
+# In even dimension: 0,2,...
+x_even = x_0 * rope_cache_0 - x_1 * rope_cache_1
+print('x_even shape: \n', x_even.shape)
+# In odds dimension: 1, 3,...
+x_odd = x_1 * rope_cache_0 + x_0 * rope_cache_1
+print('x_odd shape: \n', x_odd.shape)
+out_put = torch.stack([x_even, x_odd], dim = -1)
+print('out_put shape: \n', out_put.shape)
+out_put = out_put.flatten(3)
+print('out_put shape: \n', out_put.shape)
+
+# output shape is indentity with input shape
+```
+
