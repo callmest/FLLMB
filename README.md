@@ -17,7 +17,16 @@ This is the repetory of reproducing several llm models notebook.
 ## Content
 - [x] transformer
 - [x] GPT-2
-- [ ] LLaMA
+- [x] LLaMA
 ---
 ## Addition
 - [x] RoPE
+- [x] BPE-Tokenizer 
+  
+## Schema
+- 1. **Transformer** \
+<img src="./assets/transformer.png" alt="transformer"/>
+- 2. **GPT**  \
+<img src="./assets/GPT.png" alt="GPT"/>
+- 3. **LLaMA**  \
+<img src="./assets/LLaMA.png" alt="LLaMA"/>
