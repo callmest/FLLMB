@@ -21,7 +21,8 @@ This is the repetory of reproducing several llm models notebook.
 ---
 ## Addition
 - [x] RoPE
-- [x] BPE-Tokenizer 
+- [x] BPE-Tokenizer
+- [x] LoRA (in llama notebook)
   
 ## Schema
 -  **Transformer** 
