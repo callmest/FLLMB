@@ -18,6 +18,7 @@ This is the repetory of reproducing several llm models notebook.
 - [x] transformer
 - [x] GPT-2
 - [x] LLaMA
+- [ ] ReinforcementLearning
 ---
 ## Addition
 - [x] RoPE
