@@ -96,10 +96,9 @@ class GridWorld():
     def getScore(self, nowState, action):
         # nowState是当前状态的编号，action是当前动作编号
         # 返回值是执行动作之后的状态编号和得分
-        # 返回值格式：(nextState, score)
+        # 返回值格式：(score, nextState)
         nowx = nowState // self.columns
         nowy = nowState % self.columns
-
         # 先判断是否是边界
         if (nowx < 0 or nowx >= self.rows or nowy < 0 or nowy >= self.columns):
             print(f"Error: nowState is out of range: ({nowx}, {nowy})")
@@ -116,35 +115,47 @@ class GridWorld():
         # print(f"nowState: ({nowx}, {nowy}), action: {action}, nextState: ({nextx}, {nexty})")
         # 判断是否越界, 如果越界，则返回当前状态和-1分
         if (nextx < 0 or nextx >= self.rows or nexty < 0 or nexty >= self.columns):
-            return (self.forbiddenAreaReward, nowState)
-        # 返回下一个状态和得分
-        return self.rewardMap[nextx][nexty], self.stateMap[nextx][nexty]
+            return (nowState, self.forbiddenAreaReward, False)
+        
+        reward = self.rewardMap[nextx][nexty]
+        nextState = self.stateMap[nextx][nexty]
+        # 表明到达了终点, 返回下一个状态和得分和是否结束
+        if reward == self.reward:
+            return nextState, reward, True
+        return nextState, reward, False     
     
-    def get_episode_score(self, now_state, action, policy, steps, stop_when_reach_target = False):
+    def get_episode_score(self, now_state, now_action, policy, steps = None, stop_when_reach_target = False):
         # now_state是当前状态的编号，action是当前动作编号
         # policy是一个(rows*columns) * 5的矩阵，每一行表示一个状态，每一行的5个元素分别表示5个动作的概率, sum(policy[i]) = 1
 
         res = []
-        next_state = now_state
-        next_action = action
+
         if stop_when_reach_target:
-            steps = 20000
+            while True:
+                reward, next_state = self.getScore(now_state, now_action)
+                # 注意下这里的policy选择是根据概率选择的
+                next_action = np.random.choice(range(5), size=1, replace=False, p=policy[next_state])[0]
+                # 如果到达了目标，就结束
+                if reward == self.reward:
+                    next_state = now_state
+                    next_action = now_action
+                    res.append((now_state, now_action, reward, next_state, next_action))
+                    break
+                res.append((now_state, now_action, reward, next_state, next_action))
+                now_state = next_state
+                now_action = next_action
+            return res
+
 
         for i in range(steps+1):
-            now_state = next_state
-            now_action = next_action
-
             reward, next_state = self.getScore(now_state, now_action)
             # policy[next_state] 应该是一个表示策略的数组，长度为5，对应于从状态 next_state 出发的每个动作的选择概率
             next_action = np.random.choice(range(5), size=1, replace=False, p=policy[next_state])[0]
 
             res.append((now_state, now_action, reward, next_state, next_action))
 
-            if stop_when_reach_target:
-                nowx = now_state // self.columns
-                nowy = now_state % self.columns
-                if self.rewardMap[nowx][nowy] == self.reward:
-                    return res
+            now_state = next_state
+            now_action = next_action
         return res
     
     def show_policy_matirx(self, policy):
@@ -190,4 +201,14 @@ class GridWorld():
             if nowy == self.columns - 1:
                 print(s)
                 s = ''
-            
+    
+    def get_final_state(self):
+        for i in range(self.rows):
+            for j in range(self.columns):
+                if self.rewardMap[i][j] == self.reward:
+                    return i,j
+                
+    def reset(self):
+        i = random.randint(0, self.rows-1)
+        j = random.randint(0, self.columns-1)
+        return self.stateMap[i][j]
