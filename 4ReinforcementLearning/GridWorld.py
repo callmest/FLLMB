@@ -1,27 +1,24 @@
 import numpy as np
 import random
-
+import matplotlib.pyplot as plt
 
 '''
-GridWorld类，用于生成一个网格世界，包含了若干个普通区域，若干个forbiddenArea，若干个target
-本类借鉴了：https://github.com/ziwenhahaha/Code-of-RL-Beginning/的实现
-转载请注明出处
+GridWorld: used to generate a grid world, including several normal areas, several forbidden areas, and several targets
+This class is inspired by: https://github.com/ziwenhahaha/Code-of-RL-Beginning/
+
+!!! Please credit the source when reposting. !!!
 '''
+
 class GridWorld():
-    # n行，m列，随机若干个forbiddenArea，随机若干个target
+    # n rows, m columns, several forbiddenArea, several target
     # A1: move upwards
     # A2: move rightwards;
     # A3: move downwards;
     # A4: move leftwards;
     # A5: stay unchanged;
 
-    stateMap = None  #大小为rows*columns的list，每个位置存的是state的编号
-    RewardMap = None  #大小为rows*columns的list，每个位置存的是奖励值 0 1 -1
-    Reward = 0             #targetArea的得分
-    forbiddenAreaReward=0  #forbiddenArea的得分
-
-    # desc 是自定义的地图，是一个二维数组，每个元素是一个字符，'#'表示forbiddenArea，'T'表示target
-    # 例如：
+    # desc is a custom map, it is a two-dimensional array, each element is a character, '#' represents forbiddenArea, 'T' represents target
+    # For example：
     #     desc = [
     #     ['.', '.', 'T', '.', '.'],
     #     ['.', '#', '.', '#', '.'],
@@ -37,10 +34,13 @@ class GridWorld():
                 reward = 1,
                 forbiddenAreaReward = -1,
                 desc = None):
+        
+        # The reward of the target
         self.reward = reward
+        # The penalty of the forbidden area
         self.forbiddenAreaReward = forbiddenAreaReward
 
-        # 如果指定了desc，则使用desc初始化地图
+        # if desc is not None, then use the custom map
         if (desc != None):
             self.rows = len(desc)
             self.columns = len(desc[0])
@@ -50,27 +50,31 @@ class GridWorld():
                 for j in range(self.columns):
                     tmp.append(forbiddenAreaReward if desc[i][j] == '#' else reward if desc[i][j] == 'T' else 0)
                 l.append(tmp)
+            # rewardMap is a two-dimensional array, each element is a number, 0 represents normal area, forbiddenAreaReward represents forbidden area, reward represents target
             self.rewardMap = np.array(l)
+            # stateMap is a two-dimensional array, each element is a number, which represents the state number of the corresponding position
             self.stateMap = [
                 [i * self.columns + j for j in range(self.columns)] for i in range(self.rows)]
             return
         
-        # 如果没有指定desc，则随机生成地图
+        # if desc is None, then generate a random map
         self.rows = rows
         self.columns = columns
         self.forbiddenAreaNums = forbiddenAreaNums
         self.targetNums = targetNums
         self.seed = seed
 
-        random.seed(self.seed)
+        # random.seed(self.seed)
 
-        # 生成随机地图
-        # 生成一个随机的地图，地图大小为rows*columns，其中有forbiddenAreaNums个forbiddenArea，有targetNums个target
+        # Generate a random map, the size of the map is rows*columns, there are forbiddenAreaNums forbidden areas, and there are targetNums targets
+
         l = [i for i in range(self.rows * self.columns)]
         random.shuffle(l)
-        # 生成一个长度为rows*columns的list，每个元素是0，表示普通区域
+        
+        # g is a one-dimensional array, each element is a number, 0 represents normal area, forbiddenAreaReward represents forbidden area, reward represents target
         self.g = [0 for i in range(self.rows * self.columns)]
-        # 向其中随机插入forbiddenArea和target
+
+        # Randomly select forbiddenAreaNums forbidden areas and targetNums targets
         for i in range(self.forbiddenAreaNums):
             self.g[l[i]] = forbiddenAreaReward
         for i in range(targetNums):
@@ -80,7 +84,7 @@ class GridWorld():
         self.stateMap = [
             [i * self.columns + j for j in range(self.columns)] for i in range(self.rows)]
 
-    # 显示上述地图
+    # Show the map
     def show(self):
         for i in range(self.rows):
             s = ''
@@ -93,33 +97,37 @@ class GridWorld():
                 s += temp[self.rewardMap[i][j]]
             print(s)
 
-    def getScore(self, nowState, action):
-        # nowState是当前状态的编号，action是当前动作编号
-        # 返回值是执行动作之后的状态编号和得分
-        # 返回值格式：(score, nextState)
+    def step(self, nowState, action):
+        '''
+        Return the next state and the score after taking the action and whether the game is over: (nextState, reward, isEnd)
+        nowState: the number of the current state, action: the number of the current action
+        action: 0: up, 1: right, 2: down, 3: left, 4: stay unchanged
+
+        '''
         nowx = nowState // self.columns
         nowy = nowState % self.columns
-        # 先判断是否是边界
+        # Whether the current state is out of range
         if (nowx < 0 or nowx >= self.rows or nowy < 0 or nowy >= self.columns):
             print(f"Error: nowState is out of range: ({nowx}, {nowy})")
             return None
+        # Whether the current action is out of range
         if (action < 0 or action > 5):
             print(f"Error: action is out of range: {action}")
             return None
 
-        # action: 上，右，下，左，不动
-        # action: (x, y) e.g. (0, 1) 表示x不变，y+1
+        # action: left, up, right, down, stay unchanged
+        # action: (x, y) e.g. (0, 1) represents x unchanged, y + 1
         action_list = [(-1, 0), (0, 1), (1, 0), (0, -1), (0, 0)]
         nextx = nowx + action_list[action][0]
         nexty = nowy + action_list[action][1]
         # print(f"nowState: ({nowx}, {nowy}), action: {action}, nextState: ({nextx}, {nexty})")
-        # 判断是否越界, 如果越界，则返回当前状态和-1分
+        # Whether the next state is out of range
         if (nextx < 0 or nextx >= self.rows or nexty < 0 or nexty >= self.columns):
             return (nowState, self.forbiddenAreaReward, False)
         
         reward = self.rewardMap[nextx][nexty]
         nextState = self.stateMap[nextx][nexty]
-        # 表明到达了终点, 返回下一个状态和得分和是否结束
+        # Whether the game is over
         if reward == self.reward:
             return nextState, reward, True
         return nextState, reward, False     
@@ -160,12 +168,11 @@ class GridWorld():
     
     def show_policy_matirx(self, policy):
         '''
-        policy是一个(rows*columns) * 5的矩阵，每一行表示一个状态，每一行的5个元素分别表示5个动作的概率, sum(policy[i]) = 1
-        这个方法用于展示每个状态的每个动作的概率
+        policy: a (rows*columns) * 5 matrix, each row represents a state, and the 5 elements of each row represent the probabilities of 5 actions, sum(policy[i]) = 1
+        This method is used to display the probability of each action of each state
         '''
-        # 展示当前的策略
         s = ''
-        # print(policy)
+        print(f'Now policy:')
         for i in range(self.rows * self.columns):
             nowx = i // self.columns
             nowy = i % self.columns
@@ -177,27 +184,6 @@ class GridWorld():
             if self.rewardMap[nowx][nowy] == self.forbiddenAreaReward:
                 tmp = {0:"⏫️",1:"⏩️",2:"⏬",3:"⏪",4:"🔄"} 
                 s += tmp[np.argmax(policy[i])]
-            if nowy == self.columns - 1:
-                print(s)
-                s = ''
-    def show_policy_list(self, policy):
-        '''
-        policy是一个(rows*columns) 的列表，每个元素代表在每个状态下的策略
-        '''
-        # 展示当前的策略
-        s = ''
-        print('现在的策略是：')
-        for i in range(self.rows * self.columns):
-            nowx = i // self.columns
-            nowy = i % self.columns
-            if self.rewardMap[nowx][nowy] == self.reward:
-                s += '✅'
-            if self.rewardMap[nowx][nowy] == 0:
-                tmp = {0:"⬆️",1:"➡️",2:"⬇️",3:"⬅️",4:"🔄"}
-                s += tmp[policy[i]]
-            if self.rewardMap[nowx][nowy] == self.forbiddenAreaReward:
-                tmp = {0:"⏫️",1:"⏩️",2:"⏬",3:"⏪",4:"🔄"} 
-                s += tmp[policy[i]]
             if nowy == self.columns - 1:
                 print(s)
                 s = ''
@@ -208,7 +194,14 @@ class GridWorld():
                 if self.rewardMap[i][j] == self.reward:
                     return i,j
                 
-    def reset(self):
-        i = random.randint(0, self.rows-1)
-        j = random.randint(0, self.columns-1)
-        return self.stateMap[i][j]
+    def show_state_value(self, state_values):
+
+        fig, ax = plt.subplots()
+
+        cax = ax.matshow(state_values, cmap='viridis')
+
+        for i in range(state_values.shape[0]):
+            for j in range(state_values.shape[1]):
+                ax.text(j, i, f'{state_values[i, j]:.1f}', va='center', ha='center', color='white')
+
+        plt.show()

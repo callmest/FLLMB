@@ -21,16 +21,18 @@ Edited By Tao Shen 2024-10-22
 Reference (顺序不分先后): 
 
 1. Lilianweng blog: https://lilianweng.github.io/posts/2021-07-11-diffusion-models/
-
 2. Hung-yi Lee videos: [【生成式AI】Diffusion Model 原理剖析 (1/4) (optional) (youtube.com)](https://www.youtube.com/watch?v=ifCDXFdeaaM&list=PLJV_el3uVTsNi7PgekEUFsyVllAJXRsP-&index=6)
-
 3. Understanding Diffusion Models: A Unified Perspective [https://arxiv.org/abs/2208.11970]
-
 4. denoising diffusion probabilistic models (DDPM; Ho et al. 2020)[https://arxiv.org/abs/2006.11239]
-
 5. B站参考：[一个视频看懂扩散模型DDPM原理推导|AI绘画底层模型_哔哩哔哩_bilibili](https://www.bilibili.com/video/BV1p24y1K7Pf?spm_id_from=333.788.videopod.sections&vd_source=7475af279c35642dd00ebe3c305bd3db)
 
-   
+---
+
+Update:
+
+- DDIM Sampling code in notebook (2024-11-10)
+
+---
 
 ### 0. 问题定义：扩散模型究竟在解决一件什么样的事情？
 
