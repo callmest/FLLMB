@@ -132,19 +132,26 @@ class GridWorld():
             return nextState, reward, True
         return nextState, reward, False     
     
-    def get_episode_score(self, now_state, now_action, policy, steps = None, stop_when_reach_target = False):
-        # now_state是当前状态的编号，action是当前动作编号
-        # policy是一个(rows*columns) * 5的矩阵，每一行表示一个状态，每一行的5个元素分别表示5个动作的概率, sum(policy[i]) = 1
+    def get_episode_return(self, now_state, now_action, policy, steps = None, stop_when_reach_target = False):
+        '''
+        Get the return of an episode
+        now_state: the number of the current state, 
+        now_action: the number of the current action,
+        policy: a (rows*columns) * 5 matrix, each row represents a state, and the 5 elements of each row represent the probabilities of 5 actions, sum(policy[i]) = 1,
+        steps: the number of steps to take, if None, then the episode will end when the target is reached
+        stop_when_reach_target: whether to stop when the target is reached
+        Return: a list of tuples, each tuple is (now_state, now_action, reward, next_state, next_action)
+        '''
 
         res = []
-
-        if stop_when_reach_target:
+        
+        if stop_when_reach_target or steps == None:
             while True:
-                reward, next_state = self.getScore(now_state, now_action)
-                # 注意下这里的policy选择是根据概率选择的
+                next_state, reward, end = self.step(now_state, now_action)
+                # according to the policy, choose the next action
                 next_action = np.random.choice(range(5), size=1, replace=False, p=policy[next_state])[0]
-                # 如果到达了目标，就结束
-                if reward == self.reward:
+                # if the target is reached, then the episode ends
+                if end:
                     next_state = now_state
                     next_action = now_action
                     res.append((now_state, now_action, reward, next_state, next_action))
@@ -154,14 +161,15 @@ class GridWorld():
                 now_action = next_action
             return res
 
-
-        for i in range(steps+1):
-            reward, next_state = self.getScore(now_state, now_action)
-            # policy[next_state] 应该是一个表示策略的数组，长度为5，对应于从状态 next_state 出发的每个动作的选择概率
+        # why steps+1? because the first step is the initial state and action
+        # the first action is exactly we want to calculate the action value
+        # for example, if the steps is 5, and we take the first action, then we have 4 steps left
+        # But actually, we want to calculate the action value of the first action, so the 5 steps should be not contain the first action
+        for _ in range(steps+1):
+            next_state, reward, _ = self.step(now_state, now_action)
+            # according to the policy, choose the next action
             next_action = np.random.choice(range(5), size=1, replace=False, p=policy[next_state])[0]
-
             res.append((now_state, now_action, reward, next_state, next_action))
-
             now_state = next_state
             now_action = next_action
         return res
