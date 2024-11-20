@@ -19,6 +19,9 @@ This is the repetory of reproducing several llm models notebook.
 - [x] GPT-2
 - [x] LLaMA
 - [ ] ReinforcementLearning
+    - [x] value iteration and policy iteration
+    - [x] Monte Carlo Algorithms
+    - [ ] SGD
 ---
 ## Addition
 - [x] RoPE
